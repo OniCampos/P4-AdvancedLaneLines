@@ -124,4 +124,19 @@ Here's a [link to my video result](./output_videos/project_video_output.mp4)
 
 #### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+For the first part of the project where I calibrate the camera using `cv2.calibrateCamera()` and I correct the distortion of images using `cv2.undistort()`, it was very straightfoward applying the same pipeline used on the lessons. 
+For the thresholded binary image, I tried a lot of combinations of gradient and color's channels of images. The best combinations was with the gradient with respect of x AND the gradient with respect of y and using the saturation channels for the HLS color space AND the red channel for the RGB color space. The final binary iamge was the combination of gradient OR color binaries with the thresholds as follows:
+
+```python
+# Gradient thresholds
+gradx_image = abs_sobel_threshold(undistorted_image, orient='x', sobel_kernel=9, thresh=(40, 200))
+grady_image = abs_sobel_threshold(undistorted_image, orient='y', sobel_kernel=9, thresh=(40, 200))
+   
+# Color threshold
+colorbinary = color_threshold(undistorted_image, r_thresh=(140, 255), s_thresh=(140, 255))
+```
+For the perspective transform, I had to choose which source (`src`) and destination (`dst`) points I had to use on the `cv2.getPerspectiveTransform()` to transform the original images to a bird's eye view of the vehicle. So I choose the points using the image of the straight line provided in the project repository ("straight_lines1.jpg") and the result is on the item 3 of this writeup report.
+For the detection of lines, I used the sliding widows algorithm to find the position of the pixels for the left and right lines and after that I fit a 2nd order polynomial for both lines to find the equation. Then I determine the curvature of the lane and vehicle position with respect to center on `laneCurvaturesAndOffset()`.
+Finally, I warped the detected lane boundaries back onto the original image including the radius of curvature and vehicle position em relation to center.
+When I applied the pipeline to the video I noticed that in some areas (specifically when the road change the color) the lines detected abruptly change their positions and then came back to the right position. So, for each frame, I check if the detected lane has at least an approximately same distance for the center as the previous frame. If the distance is bigger than 0.3m, the previous detected lane is maintained.
+To make the pipeline more robust, I could implement the sanity check suggested on the lesson to compare the curvature, horizontal distance and parallelism. With the sanity check, depending of the result of the check, I could applied the look-ahead filter algorithm provided on the lesson or reseting the detection and find the pixels positions using the sliding windows. This could make the pipeline faster. Also could smooth the detection of the lines with the last n good detections making the lines cleaner.
