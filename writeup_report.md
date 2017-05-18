@@ -136,7 +136,10 @@ grady_image = abs_sobel_threshold(undistorted_image, orient='y', sobel_kernel=9,
 colorbinary = color_threshold(undistorted_image, r_thresh=(140, 255), s_thresh=(140, 255))
 ```
 For the perspective transform, I had to choose which source (`src`) and destination (`dst`) points I had to use on the `cv2.getPerspectiveTransform()` to transform the original images to a bird's eye view of the vehicle. So I choose the points using the image of the straight line provided in the project repository ("straight_lines1.jpg") and the result is on the item 3 of this writeup report.
+
 For the detection of lines, I used the sliding widows algorithm to find the position of the pixels for the left and right lines and after that I fit a 2nd order polynomial for both lines to find the equation. Then I determine the curvature of the lane and vehicle position with respect to center on `laneCurvaturesAndOffset()`.
 Finally, I warped the detected lane boundaries back onto the original image including the radius of curvature and vehicle position em relation to center.
+
 When I applied the pipeline to the video I noticed that in some areas (specifically when the road change the color) the lines detected abruptly change their positions and then came back to the right position. So, for each frame, I check if the detected lane has at least an approximately same distance for the center as the previous frame. If the distance is bigger than 0.3m, the previous detected lane is maintained.
+
 To make the pipeline more robust, I could implement the sanity check suggested on the lesson to compare the curvature, horizontal distance and parallelism. With the sanity check, depending of the result of the check, I could applied the look-ahead filter algorithm provided on the lesson or reseting the detection and find the pixels positions using the sliding windows. This could make the pipeline faster. Also could smooth the detection of the lines with the last n good detections making the lines cleaner.
